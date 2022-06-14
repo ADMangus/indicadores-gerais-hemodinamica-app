@@ -1,0 +1,9 @@
+streamlit 
+pandas 
+numpy
+os
+datetime
+matplotlib.pyplot
+time
+aspose.words
+PIL
