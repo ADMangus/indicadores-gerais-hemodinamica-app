@@ -9,18 +9,18 @@ import datetime
 plt.rcParams['figure.figsize'] = [13,5]
 
 # Função para plotar a imagem
-def plot_image(dados, month, equipment):
+def plot_image(dados, month, equipment, procedimento):
     fig, ax = plt.subplots()
     legenda_grafico = ['> 2000 mGy', "<2000 mGy"]
     ax.pie(dados, labels = legenda_grafico, autopct='%.2f%%')
-    ax.set_title(f'Indicadores geral {month} {datetime.date.today().year} - {equipment}', fontsize=14)
+    ax.set_title(f'Indicadores {procedimento} {month} {datetime.date.today().year} - {equipment}', fontsize=14)
     ax.legend(title = 'Kerma Acumulado (mGy)', bbox_to_anchor=(1, 0, 0.5, 1),
               shadow = True, fontsize = 10, title_fontsize = 12)
     
-    fig.savefig('Graficos\Doses acumuladas 01 - Philips.png', dpi = 100)
+    fig.savefig(f'Graficos\Philips\Doses {procedimento} - Philips.png', dpi = 100)
     return fig
 
-def plot_dose_intervalado(df, dados, month, equipment):
+def plot_dose_intervalado(df, dados, month, equipment, procedimento):
     fig, ax = plt.subplots()
     legenda_intervalada = [' DOSES < 300 mGy', 'DOSES > 300 mGy e < 500 mGy',
                                   'DOSES > 500 mGy e < 1000 mGy',
@@ -30,25 +30,89 @@ def plot_dose_intervalado(df, dados, month, equipment):
                                   'DOSES > 4000 mGy']
     ax.pie(dados, labels = legenda_intervalada, autopct='%.2f%%', colors =["#97EB6E", "#297305", "#285ECB", "#EBF258", "#C7CF22", 
                                                                            "#DF4B44", "#BB0B03"])
-    ax.set_title(f'Indicadores geral {month} {datetime.date.today().year} - {equipment}', fontsize=14)
-    ax.legend(title = f'Indicador Geral - {equipment} (Doses Pacientes) \nNúmero de procedimentos realizados: {len(df.kerma)}',
+    ax.set_title(f'Indicadores {procedimento} {month} {datetime.date.today().year} \n {equipment}', fontsize=14)
+    ax.legend(title = f'Indicador {procedimento} - {equipment} (Doses Pacientes) \nNúmero de procedimentos realizados: {len(df.kerma)}',
               bbox_to_anchor=(1.65, 0.1, 0.5, 1),
               shadow = True, fontsize = 10, title_fontsize = 12)
-    fig.savefig('Graficos\Doses acumuladas 02 - Philips.png', dpi = 100)
+    fig.savefig(f'Graficos\Philips\Doses {procedimento} intervalada - Philips.png', dpi = 100)
     
     return fig
 
-def plot_pka(df, dados, month, equipment):
+def plot_pka(df, dados, month, equipment, procedimento):
     fig,ax = plt.subplots()
     legenda_pka = [' Pka < 300 Gy.cm2', 'Pka > 300 Gy.cm2 e < 500 Gy.cm2',
                       'Pka > 500 Gy.cm2']
     plt.pie(dados, labels = legenda_pka, colors = ["#97EB6E", "#297305", "#285ECB", "#EBF258", "#C7CF22", 
                                                                            "#DF4B44", "#BB0B03"], autopct='%.2f%%')
-    plt.legend(title = f'Indicador Geral - {equipment} (Pka) \nNúmero de procedimentos realizados: {len(df.pka)}',
+    plt.legend(title = f'Indicador {procedimento} - {equipment} (Pka) \nNúmero de procedimentos realizados: {len(df.pka)}',
                bbox_to_anchor=(1.55, 0, 0.5, 1), shadow = True, fontsize = 10, title_fontsize = 12)
-    plt.title(f'PKA Procedimento {month} {datetime.date.today().year} - {equipment}', fontsize = 14)
-    fig.savefig('Graficos\PKA - Philips.png', dpi = 100)
+    plt.title(f'PKA Procedimento {procedimento} {month} {datetime.date.today().year} - {equipment}', fontsize = 14)
+    fig.savefig(f'Graficos\Philips\PKA {procedimento} - Philips.png', dpi = 100)
     return fig
+
+def gerando_indicadores(dados):
+
+    maior_dose = []
+    menor_dose = []
+
+    philips = [float(x) for x in dados.kerma]
+    for i in philips:
+        if i >= 2000:
+            maior_dose.append(i)
+        else:
+            menor_dose.append(i)
+
+    dados_kerma = [len(maior_dose), len(menor_dose)]
+
+    range_um = []
+    range_dois = []
+    range_tres = []
+    range_quatro = []
+    range_cinco = []
+    range_seis = []
+    range_sete = []
+
+    for i in philips:
+        if i < 300:
+            range_um.append(i)
+        elif i >= 300 and i < 500:
+            range_dois.append(i)
+        elif i>= 500 and i < 1000:
+            range_tres.append(i)
+        elif i>= 1000 and i < 1500:
+            range_quatro.append(i)
+        elif i>= 1500 and i < 2000:
+            range_cinco.append(i)
+        elif i >= 2000 and i < 4000:
+            range_seis.append(i)
+        elif i > 4000:
+            range_sete.append(i)
+        else:
+            print('Erro.')
+
+    dados_kerma_intervalado = [len(range_um), len(range_dois), len(range_tres), len(range_quatro), len(range_cinco), len(range_seis),
+                                           len(range_sete)]
+
+    philips_pka = [float(x) / 1000 for x in dados.pka]
+
+
+    pka_300 = []
+    pka_300_500 = []
+    pka_500 = []
+
+    for j in philips_pka:
+        if j < 300:
+            pka_300.append(j)
+        elif j >= 300 and j < 500:
+            pka_300_500.append(j)
+        elif j >=500:
+            pka_500.append(j)
+
+    dados_pka = [len(pka_300), len(pka_300_500), len(pka_500)]
+    
+    return dados_kerma, dados_kerma_intervalado, dados_pka
+
+
 
 def app():
     equipamento = st.session_state['philips']
@@ -71,6 +135,7 @@ def app():
         if checkbox:
             st.write(sala_philips)
         
+        st.write("---")
         st.write('### Dashboard para os indicadores')
         mapa = {"DATA" : "data",
                "REGISTRO PACIENTE" : "registro_paciente",
@@ -86,88 +151,79 @@ def app():
 
         sala_philips.rename(columns = mapa, inplace = True)
         df_philips = sala_philips
-
-        # Dados para Gráfico 01
-
-        maior_dose = []
-        menor_dose = []
-
-        philips = [float(x) for x in df_philips.kerma]
-        for i in philips:
-            if i >= 2000:
-                maior_dose.append(i)
-            else:
-                menor_dose.append(i)
-
-        dados_kerma = [len(maior_dose), len(menor_dose)]
-
-        range_um = []
-        range_dois = []
-        range_tres = []
-        range_quatro = []
-        range_cinco = []
-        range_seis = []
-        range_sete = []
-
-        for i in philips:
-            if i < 300:
-                range_um.append(i)
-            elif i >= 300 and i < 500:
-                range_dois.append(i)
-            elif i>= 500 and i < 1000:
-                range_tres.append(i)
-            elif i>= 1000 and i < 1500:
-                range_quatro.append(i)
-            elif i>= 1500 and i < 2000:
-                range_cinco.append(i)
-            elif i >= 2000 and i < 4000:
-                range_seis.append(i)
-            elif i > 4000:
-                range_sete.append(i)
-            else:
-                print('Erro.')
-
-        dados_kerma_intervalado = [len(range_um), len(range_dois), len(range_tres), len(range_quatro), len(range_cinco), len(range_seis),
-                                       len(range_sete)]
-
-        philips_pka = [float(x) / 1000 for x in df_philips.pka]
         
+        lista_protocolo = list(df_philips.protocolo_utilizado)
+        for i in range(len(lista_protocolo)):
+            if lista_protocolo[i][0] == 'C':
+                lista_protocolo[i] = 'Cardio'
+                
+            elif lista_protocolo[i][0] == 'V':
+                lista_protocolo[i] = 'Vascular'
         
-        pka_300 = []
-        pka_300_500 = []
-        pka_500 = []
-
-        for j in philips_pka:
-            if j < 300:
-                pka_300.append(j)
-            elif j >= 300 and j < 500:
-                pka_300_500.append(j)
-            elif j >=500:
-                pka_500.append(j)
+        df_philips.protocolo_utilizado = lista_protocolo
+        df_philips.protocolo_utilizado = df_philips.protocolo_utilizado.str.upper()
         
-        dados_pka = [len(pka_300), len(pka_300_500), len(pka_500)]
+        cardio_philips = df_philips[df_philips.protocolo_utilizado == 'CARDIO']
+        vascular_philips = df_philips[df_philips.protocolo_utilizado == 'VASCULAR']
+        
+        lista_protocolos_utilizados = list(df_philips.protocolo_utilizado.unique())
+        lista_protocolos_utilizados.insert(0,'Selecione uma opção')
         
         # Visualizando gráficos
         st.markdown('### Gráficos - Doses Pacientes')
         
-        c1,c2 = st.columns([1,2])
-        with c1:
-            st.write(plot_image(dados_kerma, mes, equipamento))
+        options_procedimentos = st.selectbox('Selecione o procedimento utilizado:', lista_protocolos_utilizados)
+        if options_procedimentos == 'Selecione uma opção':
+            st.warning('Nenhum procedimento selecionado')
             
-            st.write(plot_pka(df_philips, dados_pka, mes, equipamento))
+        elif options_procedimentos == 'CARDIO':
+            # Filtrando por procedimento 
+            a, b, c = gerando_indicadores(cardio_philips)
             
-        with c2:
-            st.write(plot_dose_intervalado(df_philips, dados_kerma_intervalado, mes, equipamento))
+            c1,c2 = st.columns([1,2])
+            with c1:
+                st.write(plot_image(a, mes, equipamento, options_procedimentos))
             
-        button_export_graph = st.button('Exportar gráficos')
-        
-        if button_export_graph:
+                st.write(plot_pka(cardio_philips, c, mes, equipamento, options_procedimentos))
             
-            with st.spinner('Exportando gráficos...'):
-                time.sleep(1.5)
-            st.success('Gráficos salvos com sucesso!')
+            with c2:
+                st.write(plot_dose_intervalado(cardio_philips, b, mes, equipamento, options_procedimentos))
+
+            button_export_graph = st.button('Exportar gráficos')
+
+            if button_export_graph:
+
+                with st.spinner('Exportando gráficos...'):
+                    time.sleep(1.5)
+                st.success('Gráficos salvos com sucesso!')
                       
-        
+        elif options_procedimentos == 'VASCULAR':  
+            vasc1, vasc2, vasc3 = gerando_indicadores(vascular_philips)
+            
+            c1,c2 = st.columns([1,2])
+            with c1:
+                st.write(plot_image(vasc1, mes, equipamento, options_procedimentos))
+            
+                st.write(plot_pka(vascular_philips, vasc3, mes, equipamento, options_procedimentos))
+            
+            with c2:
+                st.write(plot_dose_intervalado(vascular_philips, vasc2, mes, equipamento, options_procedimentos))
+
+            button_export_graph = st.button('Exportar gráficos')
+
+            if button_export_graph:
+
+                with st.spinner('Exportando gráficos...'):
+                    time.sleep(1.5)
+                st.success('Gráficos salvos com sucesso!')
+                
+        st.write('---')
+        st.markdown(f"### Número total de procedimentos no {equipamento} em {mes}")
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Cardiologia", f"{len(cardio_philips)}")
+        col2.metric("Vascular", f"{len(vascular_philips)}")
+        col3.metric("Total", f"{len(df_philips)}")
+        st.markdown(f"### Número de procedimentos no {equipamento} em {mes} por médico")
     
     
     
