@@ -33,7 +33,7 @@ def app():
             butao = st.checkbox('Exportar Relatório')
             if butao:
 
-                filename = st.session_state['relatorio'] + "\Folha timbrada digital.docx"
+                filename = st.session_state['diretorio'] + "\Folha timbrada digital.docx"
                 doc = aw.Document(filename)
 
                 # create a document builder object
@@ -175,8 +175,15 @@ def app():
                 IMAGEM8 = st.session_state['graficos'] + '\pka_tabela.PNG'
                 builder.insert_image(IMAGEM8)
                 builder.write('\n')
-                builder.writeln('Estou à disposição para que possamos otimizar as doses mantendo a melhor qualidade do procedimento,')
-
+                builder.writeln(f'Em anexo a este relatório, estão presente os indicadores individuais para cada médico, com base nos procedimento realizados. Estou à disposição para que possamos otimizar as doses mantendo a melhor qualidade do procedimento,')
+                
+                builder.write('\n')
+                builder.writeln(f'Anexo I - Cardiologia')
+                builder.write('\n')
+                builder.writeln(f'Gráficos referentes ao médico Azmus')
+                
+                
+                
                 # save document
                 nome_relatorio = st.session_state['relatorio'] + f'\{nome_equipamento} {mes}-{datetime.date.today().year}' + '.docx'
                 doc.save(nome_relatorio)

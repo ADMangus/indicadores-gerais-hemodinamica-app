@@ -20,6 +20,17 @@ def plot_image(dados, month, equipment, procedimento):
     
     return fig
 
+def plot_medicos(dados, month, equipment, procedimento, medico):
+    fig, ax = plt.subplots()
+    legenda_grafico = ['> 2000 mGy', "<2000 mGy"]
+    ax.pie(dados, labels = legenda_grafico, autopct='%.2f%%')
+    ax.set_title(f'Indicadores {procedimento} {month} {datetime.date.today().year} \n{equipment}: {medico}', fontsize=14)
+    ax.legend(title = 'Kerma Acumulado (mGy)', bbox_to_anchor=(1, 0, 0.5, 1),
+              shadow = True, fontsize = 10, title_fontsize = 12)
+    fig.savefig(f'Graficos\Siemens Artis One\Doses {procedimento} {medico} - Siemens Artis One.png', dpi = 100)
+    
+    return fig
+
 def plot_dose_intervalado(df, dados, month, equipment, procedimento):
     fig, ax = plt.subplots()
     legenda_intervalada = [' DOSES < 300 mGy', 'DOSES > 300 mGy e < 500 mGy',
@@ -48,6 +59,18 @@ def plot_pka(df, dados, month, equipment, procedimento):
                bbox_to_anchor=(1.55, 0, 0.5, 1), shadow = True, fontsize = 10, title_fontsize = 12)
     plt.title(f'PKA Procedimento {procedimento} {month} {datetime.date.today().year} \n {equipment}', fontsize = 14)
     fig.savefig(f'Graficos\Siemens Artis One\PKA {procedimento} - Siemens Artis One.png', dpi = 100)
+    return fig
+
+def plot_pka_medicos(aa, dados, month, equipment, procedimento, medico):
+    fig,ax = plt.subplots()
+    legenda_pka = [' Pka < 300 Gy.cm2', 'Pka > 300 Gy.cm2 e < 500 Gy.cm2',
+                      'Pka > 500 Gy.cm2']
+    plt.pie(dados, labels = legenda_pka, colors = ["#97EB6E", "#297305", "#285ECB", "#EBF258", "#C7CF22", 
+                                                                           "#DF4B44", "#BB0B03"], autopct='%.2f%%')
+    plt.legend(title = f'Indicador {procedimento} - {equipment} (Pka) \nNúmero de procedimentos realizados: {len(aa.pka)}',
+               bbox_to_anchor=(1.55, 0, 0.5, 1), shadow = True, fontsize = 10, title_fontsize = 12)
+    plt.title(f'PKA Procedimento {procedimento} {month} {datetime.date.today().year} \n {equipment}', fontsize = 14)
+    fig.savefig(f'Graficos\Siemens Artis One\PKA {procedimento} {medico} - Siemens Artis One.png', dpi = 100)
     return fig
 
 def gerando_indicadores(dados):
@@ -141,7 +164,8 @@ def app():
                "FRAMES CINE  (FPS)": "fps",
                "TEMPO TOTAL FLUORO (min)": "tempo_fluoro",
                "KERMA ACUMULADO (mGy)": "kerma",
-               "PRODUTO KERMA ÁREA (mGycm^2)": "pka"}
+               "PRODUTO KERMA ÁREA (mGycm^2)": "pka",
+               "MÉDICO EXECUTOR": "medico"}
 
         sala_siemens.rename(columns = mapa, inplace = True)
         df_siemens = sala_siemens
@@ -265,9 +289,139 @@ def app():
         col2.metric("Vascular", f"{len(vascular_siemens)}")
         col3.metric("Outros", f"{len(neuro_siemens) + len(quimio_siemens)}")
         col4.metric("Total", f"{len(df_siemens)}")
+                
+        #------------------------------------------------------------------------------------------
         st.markdown(f"### Número de procedimentos no {equipamento} em {mes} por médico")
-    
+        medicos_cardiologia = ['Azmus', 'Bruno', 'Mascarenhas', 'Fabio', 'Beltrame']
+        id_cardiologia = np.arange(1,6)
+        medicos_radiologia = ['Medronha', 'Fernando', 'Silvio', '', '']
+        id_radiologia = [6,7,8, 0, 0]
+        medicos_neurologia = ['Raupp', 'Gabriel', 'Marcio', '', '']
+        id_neurologia = [9,10,11,0,0]
+        medicos_vascular = ['Joel', 'Jean', 'Pezzela', 'Berger', 'Argenta']
+        id_vascular = np.arange(12,17)
+        
+        medicos = pd.DataFrame({'Cardiologia': medicos_cardiologia,
+                        'id_cardiologia': id_cardiologia,
+                        'Radiologia': medicos_radiologia,
+                        'id_radiologia': id_radiologia,
+                        'Neurologia': medicos_neurologia,
+                        'id_neurologia': id_neurologia,
+                        'Vascular': medicos_vascular,
+                       'id_vascular': id_vascular})
+        
+        tabela_geral = st.checkbox('Mostrar legenda')
+        if tabela_geral:
+            st.write(medicos)
+            
+        lista_cardio_filtrada = list(cardio_siemens.medico.unique())
+        lista_cardio_filtrada.insert(0,'Selecione uma opção')
+        lista_vascular_filtrada = list(vascular_siemens.medico.unique())
+        lista_vascular_filtrada.insert(0,'Selecione uma opção')
+        
+        
+        
+        procedimento = st.selectbox('Selecione o procedimento que deseja obter informações', lista_protocolos_utilizados)
+        if procedimento == 'Selecione uma opção':
+            st.warning('Selecione o procedimento')
+        elif procedimento == 'CARDIO':
+            medico_selecionado = st.selectbox('Selecione o médico que deseja obter infomações', lista_cardio_filtrada)
+            if medico_selecionado == '1.0':
+                st.markdown(f"### Indicadores do médico: {medicos.Cardiologia[0]}")
+                df = cardio_siemens[cardio_siemens.medico == '1.0']
+                st.write(df)
+                azmus_kerma, a, azmus_pka = gerando_indicadores(df)
+                st.write(plot_medicos(azmus_kerma, mes, equipamento,procedimento ,medicos.Cardiologia[0]))
+                st.write(plot_pka_medicos(df, azmus_pka, mes, equipamento,procedimento ,medicos.Cardiologia[0]))
+        
+            elif medico_selecionado == '2.0':
+                st.markdown(f"### Indicadores do médico: {medicos.Cardiologia[1]}")
+                df = cardio_siemens[cardio_siemens.medico == '2.0']
+                st.write(df)
+                bruno_kerma, b, bruno_pka = gerando_indicadores(df)
+                st.write(plot_medicos(bruno_kerma, mes, equipamento,procedimento ,medicos.Cardiologia[1]))
+                st.write(plot_pka_medicos(df, bruno_pka, mes, equipamento,procedimento ,medicos.Cardiologia[1]))
+        
+            elif medico_selecionado == '3.0':
+                st.markdown(f"### Indicadores do médico: {medicos.Cardiologia[2]}")
+                df = cardio_siemens[cardio_siemens.medico == '3.0']
+                st.write(df)
+                mascarenhas_kerma, c, mascarenhas_pka = gerando_indicadores(df)
+                st.write(plot_medicos(mascarenhas_kerma, mes, equipamento,procedimento ,medicos.Cardiologia[2]))
+                st.write(plot_pka_medicos(df,mascarenhas_pka, mes, equipamento,procedimento ,medicos.Cardiologia[2]))
+        
+            elif medico_selecionado == '4.0':
+                st.markdown(f"### Indicadores do médico: {medicos.Cardiologia[3]}")
+                df = cardio_siemens[cardio_siemens.medico == '4.0']
+                st.write(df)
+                fabio_kerma, d, fabio_pka = gerando_indicadores(df)
+                st.write(plot_medicos(fabio_kerma, mes, equipamento,procedimento ,medicos.Cardiologia[3]))
+                st.write(plot_pka_medicos(df, fabio_pka, mes, equipamento,procedimento ,medicos.Cardiologia[3]))
+        
+            elif medico_selecionado == '5.0':
+                st.markdown(f"### Indicadores do médico: {medicos.Cardiologia[4]}")
+                df = cardio_siemens[cardio_siemens.medico == '5.0']
+                st.write(df)
+                beltrame_kerma, e, beltrame_pka = gerando_indicadores(df)
+                st.write(plot_medicos(beltrame_kerma, mes, equipamento,procedimento ,medicos.Cardiologia[4]))
+                st.write(plot_pka_medicos(df, beltrame_pka, mes, equipamento,procedimento ,medicos.Cardiologia[4]))
+        
+            elif medico_selecionado == 'Selecione uma opção':
+                st.warning('Selecione o médico')
+                
+            else: 
+                st.error('Médico não encontrado')
+            
+            
+        elif procedimento == 'VASCULAR':
+            medico_selecionado = st.selectbox('Selecione o médico que deseja obter infomações', vascular_siemens.medico.unique())
+            if medico_selecionado == '12.0':
+                st.markdown(f"### Indicadores do médico: {medicos.Vascular[0]}")
+                df = vascular_siemens[vascular_siemens.medico == '12.0']
+                st.write(df)
+                joel_kerma, f, joel_pka = gerando_indicadores(df)
+                st.write(plot_medicos(joel_kerma, mes, equipamento,procedimento ,medicos.Vascular[0]))
+                st.write(plot_pka_medicos(df, joel_pka, mes, equipamento,procedimento ,medicos.Vascular[0]))
+        
+            elif medico_selecionado == '13.0':
+                st.markdown(f"### Indicadores do médico: {medicos.Vascular[1]}")
+                df = vascular_siemens[vascular_siemens.medico == '13.0']
+                st.write(df)
+                jean_kerma, g, jean_pka = gerando_indicadores(df)
+                st.write(plot_medicos(jean_kerma, mes, equipamento,procedimento ,medicos.Vascular[1]))
+                st.write(plot_pka_medicos(df, jean_pka, mes, equipamento,procedimento ,medicos.Vascular[1]))
+            elif medico_selecionado == '14.0':
+                st.markdown(f"### Indicadores do médico: {medicos.Vascular[2]}")
+                df = vascular_siemens[vascular_siemens.medico == '14.0']
+                st.write(df)
+                pezzela_kerma, h, pezzela_pka = gerando_indicadores(df)
+                st.write(plot_medicos(pezzela_kerma, mes, equipamento,procedimento ,medicos.Vascular[2]))
+                st.write(plot_pka_medicos(df, pezzela_pka, mes, equipamento,procedimento ,medicos.Vascular[2]))
+            elif medico_selecionado == '15.0':
+                st.markdown(f"### Indicadores do médico: {medicos.Vascular[3]}")
+                df = vascular_siemens[vascular_siemens.medico == '15.0']
+                st.write(df)
+                berger_kerma, i, berger_pka = gerando_indicadores(df)
+                st.write(plot_medicos(berger_kerma, mes, equipamento,procedimento ,medicos.Vascular[3]))
+                st.write(plot_pka_medicos(df, berger_pka, mes, equipamento,procedimento ,medicos.Vascular[3]))
+            elif medico_selecionado == '16.0':
+                st.markdown(f"### Indicadores do médico: {medicos.Vascular[4]}")
+                df = vascular_siemens[vascular_siemens.medico == '16.0']
+                st.write(df)
+                argenta_kerma, j, argenta_pka = gerando_indicadores(df)
+                st.write(plot_medicos(argenta_kerma, mes, equipamento,procedimento ,medicos.Vascular[4]))
+                st.write(plot_pka_medicos(df, argenta_pka, mes, equipamento,procedimento ,medicos.Vascular[4]))
+            elif medico_selecionado == 'Selecione uma opção':
+                st.warning('Selecione o médico')
+                
+            else: 
+                st.error('Médico não encontrado')
 
+        
+        
+        
+        
+       
     
     
     

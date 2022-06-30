@@ -10,6 +10,7 @@ import streamlit as st
 import datetime
 
 from configparser import ConfigParser
+from PIL import Image
 
 #Layout
 st.set_page_config(layout="wide")
@@ -56,8 +57,9 @@ PAGES = { "Página Inicial": Hemo,
 st.sidebar.title('Navegação')
 selection = st.sidebar.selectbox("Qual equipamento você deseja?", list(PAGES.keys()))
 st.sidebar.markdown("""---""")
-st.sidebar.info('Desenvolvido por Arthur D. Mangussi')
-
+st.sidebar.write('*Desenvolvido por Arthur D. Mangussi*')
+aa = Image.open(st.session_state['imagem'])
+st.sidebar.image(aa,  width=10, use_column_width = True)
     
 page = PAGES[selection]
 page.app()

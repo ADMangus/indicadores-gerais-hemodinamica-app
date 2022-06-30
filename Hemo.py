@@ -7,12 +7,12 @@ import time
 from PIL import Image
 
 def app():
-    aa = Image.open(st.session_state['imagem'])
-    st.image(aa,  width=10, use_column_width = True)
     st.title('Página Inicial')
     
     st.write('### Seja Bem-vindo')
-    
+    st.write(''' Para iniciar uso da ferramenta é preciso cadastrar o nome do Cliente, com a finalidade do preenchimento do relatório final para os indicadores de dose do serviço de Hemodinâmica.
+        
+    ''')
     form = st.form(key='my_form', clear_on_submit=True)
     cliente = form.text_input('Digite o nome do cliente',
                               help='Digite o nome por extenso!',
@@ -55,7 +55,7 @@ def app():
         df.to_csv(arquivo, sep=";",index=False)
         
         with st.spinner('Carregando...'):
-            time.sleep(2)
+            time.sleep(1.2)
         st.success('Informações preenchidas e salvas com sucesso!')
         
         
